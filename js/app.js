@@ -33,10 +33,32 @@ function InitScene() {
     _control.enableDamping = true;
     _control.dampingFactor = 0.1;
     _control.enablePan = false
-
+     
     //gridhelper
     const gridHelper = new THREE.GridHelper(100, 10)
     _scene.add(gridHelper)
+    
+     // Création d'une lumiere ambiante
+     const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.25)
+     _scene.add(ambientLight)
+ 
+     // Création d'une lumiere directionelle
+     const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1)
+     directionalLight.position.set(-10, 10, 0)
+     _scene.add(directionalLight)
+ 
+    //skydome
+    const skyGeo = new THREE.SphereGeometry(400, 10, 10);
+    const loader  = new THREE.TextureLoader(),
+    texture = loader.load( "./assets/textures/space-background.jpg" );
+  
+    const material = new THREE.MeshPhongMaterial({ 
+        map: texture,
+        side: THREE.BackSide
+    });
+    var sky = new THREE.Mesh(skyGeo, material);
+    _scene.add(sky);
+
 }
 
 // Redimensionnement de la fenetre
