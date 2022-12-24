@@ -39,7 +39,7 @@ function InitScene() {
     _scene.add(gridHelper)
     
      // Création d'une lumiere ambiante
-     const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.25)
+     const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.20)
      _scene.add(ambientLight)
  
      // Création d'une lumiere directionelle
@@ -48,16 +48,14 @@ function InitScene() {
      _scene.add(directionalLight)
  
     //skydome
-    const skyGeo = new THREE.SphereGeometry(400, 10, 10);
-    const loader  = new THREE.TextureLoader(),
-    texture = loader.load( "./assets/textures/space-background.jpg" );
-  
-    const material = new THREE.MeshPhongMaterial({ 
-        map: texture,
-        side: THREE.BackSide
-    });
-    var sky = new THREE.Mesh(skyGeo, material);
-    _scene.add(sky);
+    const textureloader = new THREE.TextureLoader();
+    const bgGeometry = new THREE.SphereGeometry(400, 40, 40);
+    const bgMaterial = new THREE.MeshStandardMaterial({
+        map: textureloader.load("./assets/textures/space-background.jpg"), 
+        side: THREE.DoubleSide
+    })
+    const bg = new THREE.Mesh(bgGeometry, bgMaterial);
+    _scene.add(bg);
 
 }
 
