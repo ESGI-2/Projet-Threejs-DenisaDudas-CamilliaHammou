@@ -117,6 +117,20 @@ function InitScene() {
     terreMesh.position.x = 75
     orbitTerreMesh.add(terreMesh)
 
+    //Etape 5.1 : Orbite Lune
+
+    const orbitLuneRadius = 10;
+    const orbitLuneGeo = new THREE.TorusGeometry(orbitLuneRadius, 0.10, 32, 150);
+    const orbitLuneMat = new THREE.MeshLambertMaterial({
+        color: 0xFFFFFF,
+        transparent: true,
+        opacity: 0.5
+    });
+    const orbitLuneMesh = new THREE.Mesh(orbitLuneGeo, orbitLuneMat);
+    orbitLuneMesh.position.x = 75
+    orbitLuneMesh.rotation.z = THREE.MathUtils.degToRad(25);
+    orbitTerreMesh.add(orbitLuneMesh)
+
     //! Etape 5 : Création de Mars
     const marsTexture = new THREE.TextureLoader()
     const marsGeometry = new THREE.SphereGeometry(3, 100, 100)
@@ -136,6 +150,7 @@ function InitScene() {
     const saturneMesh = new THREE.Mesh(saturneGeometry, saturneMaterial)
     saturneMesh.position.x = 160
     orbitSaturneMesh.add(saturneMesh)
+    
 }
 
 // Redimensionnement de la fenetre
@@ -146,14 +161,15 @@ function Resize() {
 }
 
 //boucle d'animation
-function Animate() {
+function Animate(orbitTerreMesh) {
 
     // Mise à jour d'elapsed time
     _elapsedTime = _clock.getDelta()
 
     //  Definit l'axe souhaité pour la rotation (ici z)
     var zAxis = new THREE.Vector3(0, 0, 1)
-
+    //orbitTerreMesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), angle)
+    
     _renderer.render(_scene, _camera)
     requestAnimationFrame(Animate)
 }
