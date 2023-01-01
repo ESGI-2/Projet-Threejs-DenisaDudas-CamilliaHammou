@@ -107,6 +107,8 @@ function InitScene() {
     _scene.add(orbitSaturneMesh)
     orbitSaturneMesh.rotation.x = THREE.MathUtils.degToRad(90)
 
+
+
     //! Etape 5 : Création de la Terre
     const terreTexture = new THREE.TextureLoader()
     const terreGeometry = new THREE.SphereGeometry(5, 100, 100)
@@ -150,6 +152,42 @@ function InitScene() {
     const saturneMesh = new THREE.Mesh(saturneGeometry, saturneMaterial)
     saturneMesh.position.x = 160
     orbitSaturneMesh.add(saturneMesh)
+
+
+   // Etape 6 : Création de l'anneau de Saturne
+    const ringGeometry = new THREE.RingGeometry(8, 14, 64); // Création d' un anneau avec un rayon interne de 8 et un rayon externe de 14, en utilisant 64 segments
+    ringGeometry.rotateX(Math.PI / 1); // Fait pivoter l'anneau pour l'orienter horizontalement
+    ringGeometry.rotateZ(Math.PI / 1); // Fait pivoter l'anneau pour lui donner une légère inclinaison
+
+    const textureLoader = new THREE.TextureLoader();
+    const ringTexture = textureLoader.load('./assets/textures/saturn-ring-texture.png');
+    ringTexture.alphaMap = textureLoader.load('./assets/textures/saturn-ring-texture.png'); // Charge la couche alpha de la texture
+
+    const ringMaterial = new THREE.MeshBasicMaterial({ map: ringTexture, transparent: true }); // Crée un matériau en utilisant la texture chargée et en activant la transparence
+    const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial); // Crée un mesh en utilisant la géométrie et le matériau créés
+    ringMesh.position.set(160, 0, 0); // Place l'anneau à la même position que Saturne
+    ringMesh.renderOrder = 1;
+    ringMesh.rotation.z = THREE.MathUtils.degToRad(25);
+    orbitSaturneMesh.add(ringMesh); // Ajoute l'anneau en tant qu'enfant de l'orbite de Saturne
+
+    // Etape 5.2 : Création de la Lune
+    const moonTexture = new THREE.TextureLoader();
+    const moonGeometry = new THREE.SphereGeometry(0.75, 100, 100);
+    const moonMaterial = new THREE.MeshStandardMaterial({
+        map: moonTexture.load("./assets/textures/moon-texture.jpg"),
+    });
+    const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+
+    // Placement de la Lune sur son orbite
+    moonMesh.position.x = 10;
+
+    // Ajout de la Lune à la scène
+    orbitLuneMesh.add(moonMesh);
+
+    // Création de la rotation de l'orbite de la Lune
+    /*const rotationMoon = new THREE.Group();
+    rotationMoon.add(orbitLuneMesh);
+    _scene.add(rotationMoon);*/
     
 }
 
@@ -161,13 +199,13 @@ function Resize() {
 }
 
 //boucle d'animation
-function Animate(orbitTerreMesh) {
-
+function Animate() {
     // Mise à jour d'elapsed time
     _elapsedTime = _clock.getDelta()
 
     //  Definit l'axe souhaité pour la rotation (ici z)
     var zAxis = new THREE.Vector3(0, 0, 1)
+    //rotationMoon.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.01);
     //orbitTerreMesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), angle)
     
     _renderer.render(_scene, _camera)
