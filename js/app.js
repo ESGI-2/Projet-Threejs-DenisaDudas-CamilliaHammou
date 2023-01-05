@@ -1,216 +1,189 @@
 import * as THREE from 'three';
 import { OrbitControls } from './threejs/examples/jsm/controls/OrbitControls.js';
 
+//! Initialisation
+const scene = new THREE.Scene();
 
-//variable global
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-var _scene // Scene
-var _renderer // Renderer
-var _camera // Camera
-var _control // Controle de la camera
-var _clock = new THREE.Clock() // Timer
-var _elapsedTime = 0 //  Durée écoulée entre la frame actuelle N et N-1
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-//function pour initialiser (etape 1 : initialisation)
-function InitScene() {
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true;
+orbit.dampingFactor = 0.1;
+orbit.enablePan = false;
 
-    // Initialisation de la scene
-    _scene = new THREE.Scene()
+camera.position.set(-90, 140, 140);
+orbit.update();
 
-    // Initialisation du renderer, activation de l'anti aliasing et des ombres
-    _renderer = new THREE.WebGLRenderer({ antialias: true })
-    _renderer.shadowMap.enabled = true
-    _renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    _renderer.setSize(window.innerWidth, window.innerHeight)
-    document.body.appendChild(_renderer.domElement)
+const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.20);
+scene.add(ambientLight);
+const pointLight = new THREE.PointLight(0xFFFFFF, 2, 200);
+scene.add(pointLight);
 
-    // Initialisation et placement de la camera
-    _camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000)
-    _camera.position.set(100, 20, 10)
+const gridHelper = new THREE.GridHelper(100, 10);
+scene.add(gridHelper);
 
-    // Création du controle camera
-    _control = new OrbitControls(_camera, _renderer.domElement)
-    _control.enableDamping = true;
-    _control.dampingFactor = 0.1;
-    _control.enablePan = false
+//skydome
+const textureloader = new THREE.TextureLoader();
+const bgGeometry = new THREE.SphereGeometry(400, 40, 40);
+const bgMaterial = new THREE.MeshStandardMaterial({
+    map: textureloader.load("./assets/textures/space-background.jpg"),
+    side: THREE.DoubleSide
+})
+const bg = new THREE.Mesh(bgGeometry, bgMaterial);
+scene.add(bg);
 
-    //gridhelper
-    const gridHelper = new THREE.GridHelper(100, 10)
-    _scene.add(gridHelper)
+//! Création Soleil
+const sunTexture = new THREE.TextureLoader()
+const sunGeometry = new THREE.SphereGeometry(30, 100, 100)
+const sunMaterial = new THREE.MeshBasicMaterial({
+    map: sunTexture.load("./assets/textures/sun-texture.jpg"),
+});
+const sun = new THREE.Mesh(sunGeometry, sunMaterial)
+scene.add(sun);
 
-    // Création d'une lumiere ambiante
-    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.20)
-    _scene.add(ambientLight)
+//! Création Orbites
+//* TERRE:
+const orbitTerreRadius = 75;
+const orbitTerreGeo = new THREE.TorusGeometry(orbitTerreRadius, 0.10, 32, 150);
+const orbitTerreMat = new THREE.MeshLambertMaterial({
+    color: 0xFFFFFF,
+    transparent: true,
+    opacity: 0.5
+});
+const orbitTerre = new THREE.Mesh(orbitTerreGeo, orbitTerreMat);
+scene.add(orbitTerre);
+orbitTerre.rotation.x = THREE.MathUtils.degToRad(90);
 
-    // Création d'une point light
-    //const pointLight = new THREE.PointLight( 0xff0000, 0.5, 0 );
-    //pointLight.position.set( 0, 0, 0 );
-    //_scene.add( pointLight );
+//* MARS:
+const orbitMarsRadius = 100;
+const orbitMarsGeo = new THREE.TorusGeometry(orbitMarsRadius, 0.10, 32, 150);
+const orbitMarsMat = new THREE.MeshLambertMaterial({
+    color: 0xFFFFFF,
+    transparent: true,
+    opacity: 0.5
+});
+const orbitMars = new THREE.Mesh(orbitMarsGeo, orbitMarsMat);
+scene.add(orbitMars);
+orbitMars.rotation.x = THREE.MathUtils.degToRad(90);
 
-    // Création d'une lumiere directionelle
-    const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1)
-    directionalLight.position.set(-10, 10, 0)
-    _scene.add(directionalLight)
+//* SATURNE:
+const orbitSaturneRadius = 160;
+const orbitSaturneGeo = new THREE.TorusGeometry(orbitSaturneRadius, 0.10, 32, 150);
+const orbitSaturneMat = new THREE.MeshLambertMaterial({
+    color: 0xFFFFFF,
+    transparent: true,
+    opacity: 0.5
+});
+const orbitSaturne = new THREE.Mesh(orbitSaturneGeo, orbitSaturneMat);
+scene.add(orbitSaturne);
+orbitSaturne.rotation.x = THREE.MathUtils.degToRad(90);
 
-    //skydome
-    const textureloader = new THREE.TextureLoader();
-    const bgGeometry = new THREE.SphereGeometry(400, 40, 40);
-    const bgMaterial = new THREE.MeshStandardMaterial({
-        map: textureloader.load("./assets/textures/space-background.jpg"),
-        side: THREE.DoubleSide
-    })
-    const bg = new THREE.Mesh(bgGeometry, bgMaterial);
-    _scene.add(bg);
+//* LUNE:
+const orbitLuneRadius = 10;
+const orbitLuneGeo = new THREE.TorusGeometry(orbitLuneRadius, 0.10, 32, 150);
+const orbitLuneMat = new THREE.MeshLambertMaterial({
+    color: 0xFFFFFF,
+    transparent: true,
+    opacity: 0.5
+});
+const orbitLune = new THREE.Mesh(orbitLuneGeo, orbitLuneMat);
+orbitLune.position.x = 75;
+orbitLune.rotation.z = THREE.MathUtils.degToRad(25);
+orbitTerre.add(orbitLune);
 
-    //! Etape 3 : Soleil
-    const sunTexture = new THREE.TextureLoader()
-    const sunGeometry = new THREE.SphereGeometry(30, 100, 100)
-    const sunMaterial = new THREE.MeshStandardMaterial({
-        map: sunTexture.load("./assets/textures/sun-texture.jpg"),
-    });
-    const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial)
-    _scene.add(sunMesh)
+//! Création Planètes:
+//* TERRE:
+const terreTexture = new THREE.TextureLoader();
+const terreGeometry = new THREE.SphereGeometry(5, 100, 100);
+const terreMaterial = new THREE.MeshStandardMaterial({
+    map: terreTexture.load("./assets/textures/earth-texture.jpg"),
+});
+const terre = new THREE.Mesh(terreGeometry, terreMaterial);
+terre.position.x = 75;
+orbitTerre.add(terre);
+terre.rotation.x = THREE.MathUtils.degToRad(-90);
 
-    //! Etape 4 : Orbite Terre
-    const orbitTerreRadius = 75
-    const orbitTerreGeo = new THREE.TorusGeometry(orbitTerreRadius, 0.10, 32, 150)
-    const orbitTerreMat = new THREE.MeshLambertMaterial({
-        color: 0xFFFFFF,
-        transparent: true,
-        opacity: 0.5
-    });
-    const orbitTerreMesh = new THREE.Mesh(orbitTerreGeo, orbitTerreMat)
-    _scene.add(orbitTerreMesh)
-    orbitTerreMesh.rotation.x = THREE.MathUtils.degToRad(90)
+//* MARS:
+const marsTexture = new THREE.TextureLoader();
+const marsGeometry = new THREE.SphereGeometry(3, 100, 100);
+const marsMaterial = new THREE.MeshStandardMaterial({
+    map: marsTexture.load("./assets/textures/mars-texture.jpg"),
+});
+const mars = new THREE.Mesh(marsGeometry, marsMaterial);
+mars.position.x = 100;
+orbitMars.add(mars);
+mars.rotation.x = THREE.MathUtils.degToRad(-90);
 
-    //! Etape 4 : Orbite Mars
-    const orbitMarsRadius = 100
-    const orbitMarsGeo = new THREE.TorusGeometry(orbitMarsRadius, 0.10, 32, 150)
-    const orbitMarsMat = new THREE.MeshLambertMaterial({
-        color: 0xFFFFFF,
-        transparent: true,
-        opacity: 0.5
-    });
-    const orbitMarsMesh = new THREE.Mesh(orbitMarsGeo, orbitMarsMat)
-    _scene.add(orbitMarsMesh)
-    orbitMarsMesh.rotation.x = THREE.MathUtils.degToRad(90)
+//* SATURNE:
+const saturneTexture = new THREE.TextureLoader();
+const saturneGeometry = new THREE.SphereGeometry(8, 100, 100);
+const saturneMaterial = new THREE.MeshStandardMaterial({
+    map: saturneTexture.load("./assets/textures/saturn-texture.jpg"),
+});
+const saturne = new THREE.Mesh(saturneGeometry, saturneMaterial);
+saturne.position.x = 160;
+orbitSaturne.add(saturne);
+saturne.rotation.x = THREE.MathUtils.degToRad(-90);
 
-    //! Etape 4 : Orbite Saturne
-    const orbitSaturneRadius = 160
-    const orbitSaturneGeo = new THREE.TorusGeometry(orbitSaturneRadius, 0.10, 32, 150)
-    const orbitSaturneMat = new THREE.MeshLambertMaterial({
-        color: 0xFFFFFF,
-        transparent: true,
-        opacity: 0.5
-    })
-    const orbitSaturneMesh = new THREE.Mesh(orbitSaturneGeo, orbitSaturneMat)
-    _scene.add(orbitSaturneMesh)
-    orbitSaturneMesh.rotation.x = THREE.MathUtils.degToRad(90)
+//* ANNEAUX SATURNE:
+const ringSaturneGeometry = new THREE.RingGeometry(8, 14, 64);
+ringSaturneGeometry.rotateX(Math.PI / 1);
+ringSaturneGeometry.rotateZ(Math.PI / 1);
 
+const textureLoader = new THREE.TextureLoader();
+const ringSaturneTexture = textureLoader.load('./assets/textures/saturn-ring-texture.png');
+ringSaturneTexture.alphaMap = textureLoader.load('./assets/textures/saturn-ring-texture.png');
 
+const ringSaturneMaterial = new THREE.MeshBasicMaterial({ map: ringSaturneTexture, transparent: true });
+const ringSaturne = new THREE.Mesh(ringSaturneGeometry, ringSaturneMaterial);
+ringSaturne.position.set(160, 0, 0);
+ringSaturne.renderOrder = 1;
+ringSaturne.rotation.z = THREE.MathUtils.degToRad(25);
+orbitSaturne.add(ringSaturne);
 
-    //! Etape 5 : Création de la Terre
-    const terreTexture = new THREE.TextureLoader()
-    const terreGeometry = new THREE.SphereGeometry(5, 100, 100)
-    const terreMaterial = new THREE.MeshStandardMaterial({
-        map: terreTexture.load("./assets/textures/earth-texture.jpg"),
-    });
-    const terreMesh = new THREE.Mesh(terreGeometry, terreMaterial)
-    terreMesh.position.x = 75
-    orbitTerreMesh.add(terreMesh)
+//! Création de la LUNE:
+const luneTexture = new THREE.TextureLoader();
+const luneGeometry = new THREE.SphereGeometry(0.75, 100, 100);
+const luneMaterial = new THREE.MeshStandardMaterial({
+    map: luneTexture.load("./assets/textures/moon-texture.jpg"),
+});
+const lune = new THREE.Mesh(luneGeometry, luneMaterial);
+lune.position.x = 10;
+orbitLune.add(lune);
+lune.rotation.x = THREE.MathUtils.degToRad(-90);
 
-    //Etape 5.1 : Orbite Lune
-
-    const orbitLuneRadius = 10;
-    const orbitLuneGeo = new THREE.TorusGeometry(orbitLuneRadius, 0.10, 32, 150);
-    const orbitLuneMat = new THREE.MeshLambertMaterial({
-        color: 0xFFFFFF,
-        transparent: true,
-        opacity: 0.5
-    });
-    const orbitLuneMesh = new THREE.Mesh(orbitLuneGeo, orbitLuneMat);
-    orbitLuneMesh.position.x = 75
-    orbitLuneMesh.rotation.z = THREE.MathUtils.degToRad(25);
-    orbitTerreMesh.add(orbitLuneMesh)
-
-    //! Etape 5 : Création de Mars
-    const marsTexture = new THREE.TextureLoader()
-    const marsGeometry = new THREE.SphereGeometry(3, 100, 100)
-    const marsMaterial = new THREE.MeshStandardMaterial({
-        map: marsTexture.load("./assets/textures/mars-texture.jpg"),
-    });
-    const marsMesh = new THREE.Mesh(marsGeometry, marsMaterial)
-    marsMesh.position.x = 100
-    orbitMarsMesh.add(marsMesh)
-
-    //! Etape 5 : Création de Saturne
-    const saturneTexture = new THREE.TextureLoader()
-    const saturneGeometry = new THREE.SphereGeometry(8, 100, 100)
-    const saturneMaterial = new THREE.MeshStandardMaterial({
-        map: saturneTexture.load("./assets/textures/saturn-texture.jpg"),
-    });
-    const saturneMesh = new THREE.Mesh(saturneGeometry, saturneMaterial)
-    saturneMesh.position.x = 160
-    orbitSaturneMesh.add(saturneMesh)
-
-
-   // Etape 6 : Création de l'anneau de Saturne
-    const ringGeometry = new THREE.RingGeometry(8, 14, 64); // Création d' un anneau avec un rayon interne de 8 et un rayon externe de 14, en utilisant 64 segments
-    ringGeometry.rotateX(Math.PI / 1); // Fait pivoter l'anneau pour l'orienter horizontalement
-    ringGeometry.rotateZ(Math.PI / 1); // Fait pivoter l'anneau pour lui donner une légère inclinaison
-
-    const textureLoader = new THREE.TextureLoader();
-    const ringTexture = textureLoader.load('./assets/textures/saturn-ring-texture.png');
-    ringTexture.alphaMap = textureLoader.load('./assets/textures/saturn-ring-texture.png'); // Charge la couche alpha de la texture
-
-    const ringMaterial = new THREE.MeshBasicMaterial({ map: ringTexture, transparent: true }); // Crée un matériau en utilisant la texture chargée et en activant la transparence
-    const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial); // Crée un mesh en utilisant la géométrie et le matériau créés
-    ringMesh.position.set(160, 0, 0); // Place l'anneau à la même position que Saturne
-    ringMesh.renderOrder = 1;
-    ringMesh.rotation.z = THREE.MathUtils.degToRad(25);
-    orbitSaturneMesh.add(ringMesh); // Ajoute l'anneau en tant qu'enfant de l'orbite de Saturne
-
-    // Etape 5.2 : Création de la Lune
-    const moonTexture = new THREE.TextureLoader();
-    const moonGeometry = new THREE.SphereGeometry(0.75, 100, 100);
-    const moonMaterial = new THREE.MeshStandardMaterial({
-        map: moonTexture.load("./assets/textures/moon-texture.jpg"),
-    });
-    const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
-
-    // Placement de la Lune sur son orbite
-    moonMesh.position.x = 10;
-
-    // Ajout de la Lune à la scène
-    orbitLuneMesh.add(moonMesh);
-
-    // Création de la rotation de l'orbite de la Lune
-    /*const rotationMoon = new THREE.Group();
-    rotationMoon.add(orbitLuneMesh);
-    _scene.add(rotationMoon);*/
-    
-}
-
-// Redimensionnement de la fenetre
-function Resize() {
-    _camera.aspect = window.innerWidth / window.innerHeight;
-    _camera.updateProjectionMatrix();
-    _renderer.setSize(window.innerWidth, window.innerHeight)
-}
-
-//boucle d'animation
+//! Animation:
 function Animate() {
-    // Mise à jour d'elapsed time
-    _elapsedTime = _clock.getDelta()
+    var yAxis = new THREE.Vector3(0, 1, 0);
+    var zAxis = new THREE.Vector3(0, 0, 1);
 
-    //  Definit l'axe souhaité pour la rotation (ici z)
-    var zAxis = new THREE.Vector3(0, 0, 1)
-    //rotationMoon.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.01);
-    //orbitTerreMesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), angle)
-    
-    _renderer.render(_scene, _camera)
-    requestAnimationFrame(Animate)
+    sun.rotateOnAxis(yAxis, 0.01);
+
+    orbitTerre.rotateOnAxis(zAxis, 0.001);
+    orbitMars.rotateOnAxis(zAxis, 0.002);
+    orbitSaturne.rotateOnAxis(zAxis, 0.003);
+    orbitLune.rotateOnAxis(zAxis, 0.004);
+
+    terre.rotateOnAxis(yAxis, 0.01);
+    mars.rotateOnAxis(yAxis, 0.01);
+    saturne.rotateOnAxis(yAxis, 0.01);
+    ringSaturne.rotateOnAxis(zAxis, 0.01);
+    lune.rotateOnAxis(yAxis, 0.01);
+
+    renderer.render(scene, camera);
 }
-InitScene() //initialisation
-Animate() //animation
-window.addEventListener('resize', Resize); //window resize
+
+renderer.setAnimationLoop(Animate);
+
+//! Resize fênetre
+window.addEventListener('resize', function() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
