@@ -1,34 +1,45 @@
 import * as THREE from 'three';
 import { OrbitControls } from './threejs/examples/jsm/controls/OrbitControls.js';
 
+//! variables globales
+var _clock = new THREE.Clock(); // Timer
+var _elapsedTime = 0;
+
 //! Initialisation
+// Initialisation de la scene
 const scene = new THREE.Scene();
 
+// Initialisation du renderer, activation de l'anti aliasing et des ombres
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Initialisation et placement de la camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(-90, 140, 140);
 
+ // Création du controle camera
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enableDamping = true;
 orbit.dampingFactor = 0.1;
 orbit.enablePan = false;
 
-camera.position.set(-90, 140, 140);
 orbit.update();
 
+// Création d'une lumiere ambiante
 const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.20);
 scene.add(ambientLight);
+// Création de la lumière du soleil
 const pointLight = new THREE.PointLight(0xFFFFFF, 2, 200);
 scene.add(pointLight);
 
+// Création du gridhelper
 const gridHelper = new THREE.GridHelper(100, 10);
 scene.add(gridHelper);
 
-//skydome
+// Création du skydome
 const textureloader = new THREE.TextureLoader();
 const bgGeometry = new THREE.SphereGeometry(400, 40, 40);
 const bgMaterial = new THREE.MeshStandardMaterial({
@@ -37,6 +48,7 @@ const bgMaterial = new THREE.MeshStandardMaterial({
 })
 const bg = new THREE.Mesh(bgGeometry, bgMaterial);
 scene.add(bg);
+//! Fin Initialisation
 
 //! Création Soleil
 const sunTexture = new THREE.TextureLoader()
@@ -107,7 +119,7 @@ const terreMaterial = new THREE.MeshStandardMaterial({
 const terre = new THREE.Mesh(terreGeometry, terreMaterial);
 terre.position.x = 75;
 orbitTerre.add(terre);
-terre.rotation.x = THREE.MathUtils.degToRad(-90);
+terre.rotation.x = THREE.MathUtils.degToRad(-90);  //rotation bonne position
 
 //* MARS:
 const marsTexture = new THREE.TextureLoader();
@@ -158,23 +170,43 @@ lune.position.x = 10;
 orbitLune.add(lune);
 lune.rotation.x = THREE.MathUtils.degToRad(-90);
 
+//! Création des asteroides
+function initAsteroides() {
+    // Création de l'objet parent qui va regrouper l'ensemble des asteroides
+    const obj = new THREE.Object3D();
+
+    const asteroideGeo = new THREE.DodecahedronGeometry();
+    const asteroidMat = new THREE.MeshLambertMaterial({ color: 0x5f4e43 })
+    const asteroide = new THREE.Mesh(asteroideGeo, asteroidMat);
+
+    obj.add(asteroide);
+}
+
 //! Animation:
 function Animate() {
+    // Mise à jour d'elapsed time
+    _elapsedTime = _clock.getDelta()
+
+    // Definition des axes
     var yAxis = new THREE.Vector3(0, 1, 0);
     var zAxis = new THREE.Vector3(0, 0, 1);
 
-    sun.rotateOnAxis(yAxis, 0.01);
+    // rotateOnAxis: params: @axe, @angle en degres/secondes * _elapsedTime
+    // Rotation du Soleil
+    sun.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
 
-    orbitTerre.rotateOnAxis(zAxis, 0.001);
-    orbitMars.rotateOnAxis(zAxis, 0.002);
-    orbitSaturne.rotateOnAxis(zAxis, 0.003);
-    orbitLune.rotateOnAxis(zAxis, 0.004);
+    // Rotation des planetes sur leur orbites
+    orbitTerre.rotateOnAxis(zAxis, 0.360 * _elapsedTime);
+    orbitMars.rotateOnAxis(zAxis, 0.0687 * _elapsedTime);
+    orbitSaturne.rotateOnAxis(zAxis, 0.010755 * _elapsedTime);
+    orbitLune.rotateOnAxis(zAxis, 0.27 * _elapsedTime);
 
-    terre.rotateOnAxis(yAxis, 0.01);
-    mars.rotateOnAxis(yAxis, 0.01);
-    saturne.rotateOnAxis(yAxis, 0.01);
-    ringSaturne.rotateOnAxis(zAxis, 0.01);
-    lune.rotateOnAxis(yAxis, 0.01);
+    // Rotation des planetes sur elles mêmes
+    terre.rotateOnAxis(yAxis, 1.0 * _elapsedTime);
+    mars.rotateOnAxis(yAxis, 1.0 * _elapsedTime);
+    saturne.rotateOnAxis(yAxis, 0.5 * _elapsedTime);
+    ringSaturne.rotateOnAxis(zAxis, 0.5 * _elapsedTime);
+    lune.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
 
     renderer.render(scene, camera);
 }
