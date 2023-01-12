@@ -24,6 +24,7 @@ var _focusSunEnabled = false;
 var _focusLuneEnabled = false;
 var _focusMarsEnabled = false;
 var _focusSaturneEnabled = false;
+var _asteroidsParent;
 
 var DatGUISettings = { // Parametres disponible dans le menu dat GUI
     orbitColor: 0xffffff,
@@ -198,17 +199,30 @@ _lune.position.x = 10;
 _orbitLune.add(_lune);
 _lune.rotation.x = THREE.MathUtils.degToRad(-90);
 
+
 //! Création des asteroides
-function initAsteroides() {
-    // Création de l'objet parent qui va regrouper l'ensemble des asteroides
-    const obj = new THREE.Object3D();
+_asteroidsParent = new THREE.Object3D();
 
-    const asteroideGeo = new THREE.DodecahedronGeometry();
-    const asteroidMat = new THREE.MeshLambertMaterial({ color: 0x5f4e43 })
-    const asteroide = new THREE.Mesh(asteroideGeo, asteroidMat);
+var asteroid_count = 125;
 
-    obj.add(asteroide);
-}
+var min_radius = 110;
+var max_radius = 140;
+
+for (var i = 0; i < asteroid_count; i++) {
+
+    var asteroidGeometry = new THREE.DodecahedronGeometry();
+    var asteroidMaterial = new THREE.MeshStandardMaterial({color: 0x8B4513}); // added brown color
+    var asteroidMesh = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+
+    var radius = Math.random() * (max_radius - min_radius) + min_radius;
+    var angle = Math.random() * 2 * Math.PI;
+    asteroidMesh.position.set(
+        radius * Math.cos(angle),0,radius * Math.sin(angle)
+        );
+    _scene.add(asteroidMesh);
+    }
+
+
 
 //! Click boutons pour focus sur les planetes
 function OnClickFocusSun() {
@@ -231,6 +245,7 @@ function OnClickFocusSaturne() {
     _focusSaturneEnabled = true
 }
 
+document.getElementById("button-soleil").removeEventListener("click", OnClickFocusSun);
 document.getElementById("button-soleil").addEventListener("click", OnClickFocusSun);
 document.getElementById("button-terre").addEventListener("click", OnClickFocusTerre);
 document.getElementById("button-lune").addEventListener("click", OnClickFocusLune);
@@ -284,6 +299,8 @@ function Animate() {
     _saturne.rotateOnAxis(yAxis, 0.5 * _elapsedTime);
     ringSaturne.rotateOnAxis(zAxis, 0.5 * _elapsedTime);
     _lune.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
+
+    _asteroidsParent.rotateOnAxis(zAxis, 2.0 * _elapsedTime);
 
     //! Focus lors du click sur les boutons
     //* Si le focus de la Terre est activé
