@@ -304,6 +304,7 @@ function Animate() {
 
     //! Focus lors du click sur les boutons
     //* Si le focus de la Terre est activé
+
     if (_focusTerreEnabled == true) {
         // On définit une position de la camera par rapport à la terre
         var offset = new THREE.Vector3(0, 5, 30);
