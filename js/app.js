@@ -1,43 +1,66 @@
 import * as THREE from 'three';
 import { OrbitControls } from './threejs/examples/jsm/controls/OrbitControls.js';
+import { GUI } from './dat.gui/dat.gui.module.js';
 
 //! variables globales
+var _scene // Scene
+var _renderer // Renderer
+var _camera // Camera
 var _clock = new THREE.Clock(); // Timer
+var _control // Controle de la camera
 var _elapsedTime = 0;
+var _gridHelper;
+var _orbitTerre;
+var _orbitLune;
+var _orbitMars;
+var _orbitSaturne;
+var _sun;
+var _terre;
+var _lune;
+var _mars;
+var _saturne;
+var _focusTerreEnabled = false // = true si le focus de la Terre est activé
+var _focusSunEnabled = false;
+var _focusLuneEnabled = false;
+var _focusMarsEnabled = false;
+var _focusSaturneEnabled = false;
+
+var DatGUISettings = { // Parametres disponible dans le menu dat GUI
+    orbitColor: 0xffffff,
+    gridHelper: false
+}
 
 //! Initialisation
 // Initialisation de la scene
-const scene = new THREE.Scene();
+_scene = new THREE.Scene();
 
 // Initialisation du renderer, activation de l'anti aliasing et des ombres
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.shadowMap.enabled = true
-renderer.shadowMap.type = THREE.PCFSoftShadowMap
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+_renderer = new THREE.WebGLRenderer({ antialias: true });
+_renderer.shadowMap.enabled = true
+_renderer.shadowMap.type = THREE.PCFSoftShadowMap
+_renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(_renderer.domElement);
 
 // Initialisation et placement de la camera
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(-90, 140, 140);
+_camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+_camera.position.set(-90, 140, 140);
 
  // Création du controle camera
-const orbit = new OrbitControls(camera, renderer.domElement);
-orbit.enableDamping = true;
-orbit.dampingFactor = 0.1;
-orbit.enablePan = false;
-
-orbit.update();
+_control = new OrbitControls(_camera, _renderer.domElement);
+_control.enableDamping = true;
+_control.dampingFactor = 0.1;
+_control.enablePan = false;
 
 // Création d'une lumiere ambiante
 const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.20);
-scene.add(ambientLight);
+_scene.add(ambientLight);
 // Création de la lumière du soleil
-const pointLight = new THREE.PointLight(0xFFFFFF, 2, 200);
-scene.add(pointLight);
+const pointLight = new THREE.PointLight(0xFFFFFF, 2, 450);
+_scene.add(pointLight);
 
 // Création du gridhelper
-const gridHelper = new THREE.GridHelper(100, 10);
-scene.add(gridHelper);
+_gridHelper = new THREE.GridHelper(100, 10);
+_scene.add(_gridHelper);
 
 // Création du skydome
 const textureloader = new THREE.TextureLoader();
@@ -47,7 +70,11 @@ const bgMaterial = new THREE.MeshStandardMaterial({
     side: THREE.DoubleSide
 })
 const bg = new THREE.Mesh(bgGeometry, bgMaterial);
-scene.add(bg);
+_scene.add(bg);
+
+const axesHelper = new THREE.AxesHelper( 200 );
+_scene.add( axesHelper );
+
 //! Fin Initialisation
 
 //! Création Soleil
@@ -56,21 +83,21 @@ const sunGeometry = new THREE.SphereGeometry(30, 100, 100)
 const sunMaterial = new THREE.MeshBasicMaterial({
     map: sunTexture.load("./assets/textures/sun-texture.jpg"),
 });
-const sun = new THREE.Mesh(sunGeometry, sunMaterial)
-scene.add(sun);
+_sun = new THREE.Mesh(sunGeometry, sunMaterial)
+_scene.add(_sun);
 
 //! Création Orbites
 //* TERRE:
 const orbitTerreRadius = 75;
 const orbitTerreGeo = new THREE.TorusGeometry(orbitTerreRadius, 0.10, 32, 150);
-const orbitTerreMat = new THREE.MeshLambertMaterial({
+const orbitTerreMat = new THREE.MeshStandardMaterial({
     color: 0xFFFFFF,
     transparent: true,
     opacity: 0.5
 });
-const orbitTerre = new THREE.Mesh(orbitTerreGeo, orbitTerreMat);
-scene.add(orbitTerre);
-orbitTerre.rotation.x = THREE.MathUtils.degToRad(90);
+_orbitTerre = new THREE.Mesh(orbitTerreGeo, orbitTerreMat);
+_scene.add(_orbitTerre);
+_orbitTerre.rotation.x = THREE.MathUtils.degToRad(90);
 
 //* MARS:
 const orbitMarsRadius = 100;
@@ -80,9 +107,9 @@ const orbitMarsMat = new THREE.MeshLambertMaterial({
     transparent: true,
     opacity: 0.5
 });
-const orbitMars = new THREE.Mesh(orbitMarsGeo, orbitMarsMat);
-scene.add(orbitMars);
-orbitMars.rotation.x = THREE.MathUtils.degToRad(90);
+_orbitMars = new THREE.Mesh(orbitMarsGeo, orbitMarsMat);
+_scene.add(_orbitMars);
+_orbitMars.rotation.x = THREE.MathUtils.degToRad(90);
 
 //* SATURNE:
 const orbitSaturneRadius = 160;
@@ -92,9 +119,9 @@ const orbitSaturneMat = new THREE.MeshLambertMaterial({
     transparent: true,
     opacity: 0.5
 });
-const orbitSaturne = new THREE.Mesh(orbitSaturneGeo, orbitSaturneMat);
-scene.add(orbitSaturne);
-orbitSaturne.rotation.x = THREE.MathUtils.degToRad(90);
+_orbitSaturne = new THREE.Mesh(orbitSaturneGeo, orbitSaturneMat);
+_scene.add(_orbitSaturne);
+_orbitSaturne.rotation.x = THREE.MathUtils.degToRad(90);
 
 //* LUNE:
 const orbitLuneRadius = 10;
@@ -104,22 +131,23 @@ const orbitLuneMat = new THREE.MeshLambertMaterial({
     transparent: true,
     opacity: 0.5
 });
-const orbitLune = new THREE.Mesh(orbitLuneGeo, orbitLuneMat);
-orbitLune.position.x = 75;
-orbitLune.rotation.z = THREE.MathUtils.degToRad(25);
-orbitTerre.add(orbitLune);
+_orbitLune = new THREE.Mesh(orbitLuneGeo, orbitLuneMat);
+_orbitLune.position.x = 75;
+_orbitLune.rotation.z = THREE.MathUtils.degToRad(25);
+_orbitTerre.add(_orbitLune);
 
 //! Création Planètes:
+
 //* TERRE:
 const terreTexture = new THREE.TextureLoader();
 const terreGeometry = new THREE.SphereGeometry(5, 100, 100);
 const terreMaterial = new THREE.MeshStandardMaterial({
     map: terreTexture.load("./assets/textures/earth-texture.jpg"),
 });
-const terre = new THREE.Mesh(terreGeometry, terreMaterial);
-terre.position.x = 75;
-orbitTerre.add(terre);
-terre.rotation.x = THREE.MathUtils.degToRad(-90);  //rotation bonne position
+_terre = new THREE.Mesh(terreGeometry, terreMaterial);
+_terre.position.x = 75;
+_orbitTerre.add(_terre);
+_terre.rotation.x = THREE.MathUtils.degToRad(-90);  //rotation bonne position
 
 //* MARS:
 const marsTexture = new THREE.TextureLoader();
@@ -127,10 +155,10 @@ const marsGeometry = new THREE.SphereGeometry(3, 100, 100);
 const marsMaterial = new THREE.MeshStandardMaterial({
     map: marsTexture.load("./assets/textures/mars-texture.jpg"),
 });
-const mars = new THREE.Mesh(marsGeometry, marsMaterial);
-mars.position.x = 100;
-orbitMars.add(mars);
-mars.rotation.x = THREE.MathUtils.degToRad(-90);
+_mars = new THREE.Mesh(marsGeometry, marsMaterial);
+_mars.position.x = 100;
+_orbitMars.add(_mars);
+_mars.rotation.x = THREE.MathUtils.degToRad(-90);
 
 //* SATURNE:
 const saturneTexture = new THREE.TextureLoader();
@@ -138,10 +166,10 @@ const saturneGeometry = new THREE.SphereGeometry(8, 100, 100);
 const saturneMaterial = new THREE.MeshStandardMaterial({
     map: saturneTexture.load("./assets/textures/saturn-texture.jpg"),
 });
-const saturne = new THREE.Mesh(saturneGeometry, saturneMaterial);
-saturne.position.x = 160;
-orbitSaturne.add(saturne);
-saturne.rotation.x = THREE.MathUtils.degToRad(-90);
+_saturne = new THREE.Mesh(saturneGeometry, saturneMaterial);
+_saturne.position.x = 160;
+_orbitSaturne.add(_saturne);
+_saturne.rotation.x = THREE.MathUtils.degToRad(-90);
 
 //* ANNEAUX SATURNE:
 const ringSaturneGeometry = new THREE.RingGeometry(8, 14, 64);
@@ -157,7 +185,7 @@ const ringSaturne = new THREE.Mesh(ringSaturneGeometry, ringSaturneMaterial);
 ringSaturne.position.set(160, 0, 0);
 ringSaturne.renderOrder = 1;
 ringSaturne.rotation.z = THREE.MathUtils.degToRad(25);
-orbitSaturne.add(ringSaturne);
+_orbitSaturne.add(ringSaturne);
 
 //! Création de la LUNE:
 const luneTexture = new THREE.TextureLoader();
@@ -165,10 +193,10 @@ const luneGeometry = new THREE.SphereGeometry(0.75, 100, 100);
 const luneMaterial = new THREE.MeshStandardMaterial({
     map: luneTexture.load("./assets/textures/moon-texture.jpg"),
 });
-const lune = new THREE.Mesh(luneGeometry, luneMaterial);
-lune.position.x = 10;
-orbitLune.add(lune);
-lune.rotation.x = THREE.MathUtils.degToRad(-90);
+_lune = new THREE.Mesh(luneGeometry, luneMaterial);
+_lune.position.x = 10;
+_orbitLune.add(_lune);
+_lune.rotation.x = THREE.MathUtils.degToRad(-90);
 
 //! Création des asteroides
 function initAsteroides() {
@@ -182,40 +210,149 @@ function initAsteroides() {
     obj.add(asteroide);
 }
 
+//! Click boutons pour focus sur les planetes
+function OnClickFocusSun() {
+    _focusSunEnabled = true
+}
+
+function OnClickFocusTerre() {
+    _focusTerreEnabled = true
+}
+
+function OnClickFocusLune() {
+    _focusLuneEnabled = true
+}
+
+function OnClickFocusMars() {
+    _focusMarsEnabled = true
+}
+
+function OnClickFocusSaturne() {
+    _focusSaturneEnabled = true
+}
+
+document.getElementById("button-soleil").addEventListener("click", OnClickFocusSun);
+document.getElementById("button-terre").addEventListener("click", OnClickFocusTerre);
+document.getElementById("button-lune").addEventListener("click", OnClickFocusLune);
+document.getElementById("button-mars").addEventListener("click", OnClickFocusMars);
+document.getElementById("button-saturne").addEventListener("click", OnClickFocusSaturne);
+
+//! Fonction qui permet d'initialiser l'UI Dat.GUI
+function InitDatGUI() {
+    const gui = new GUI();
+    // Création des parametres
+    const solarSystemSettings = gui.addFolder("Parametres du Système Solaire");
+    solarSystemSettings.addColor(DatGUISettings, "orbitColor").name("Orbites").onChange(OnChangeOrbitColor);
+    solarSystemSettings.add(DatGUISettings, "gridHelper").name("Activer/Désactiver la Grille")
+    solarSystemSettings.open();
+}
+
+// Fonction appelée lors du changement de la couleur
+function OnChangeOrbitColor() {
+    _orbitTerre.material.color.setHex(DatGUISettings.orbitColor)
+    _orbitLune.material.color.setHex(DatGUISettings.orbitColor)
+    _orbitMars.material.color.setHex(DatGUISettings.orbitColor)
+    _orbitSaturne.material.color.setHex(DatGUISettings.orbitColor)
+}
+
+function OnChangeGridHelper() {
+    _gridHelper.Mesh.visible = false;
+}
+
 //! Animation:
 function Animate() {
     // Mise à jour d'elapsed time
-    _elapsedTime = _clock.getDelta()
+    _elapsedTime = _clock.getDelta();
 
     // Definition des axes
     var yAxis = new THREE.Vector3(0, 1, 0);
-    var zAxis = new THREE.Vector3(0, 0, 1);
+    var zAxis = new THREE.Vector3(0, 0, -1);
 
     // rotateOnAxis: params: @axe, @angle en degres/secondes * _elapsedTime
     // Rotation du Soleil
-    sun.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
+    _sun.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
 
-    // Rotation des planetes sur leur orbites
-    orbitTerre.rotateOnAxis(zAxis, 0.360 * _elapsedTime);
-    orbitMars.rotateOnAxis(zAxis, 0.0687 * _elapsedTime);
-    orbitSaturne.rotateOnAxis(zAxis, 0.010755 * _elapsedTime);
-    orbitLune.rotateOnAxis(zAxis, 0.27 * _elapsedTime);
+    //! Rotation des planetes sur leur orbites
+    _orbitTerre.rotateOnAxis(zAxis, 0.0360 * _elapsedTime);
+    _orbitMars.rotateOnAxis(zAxis, 0.0687 * _elapsedTime);
+    _orbitSaturne.rotateOnAxis(zAxis, 0.010755 * _elapsedTime);
+    _orbitLune.rotateOnAxis(zAxis, 0.27 * _elapsedTime);
 
-    // Rotation des planetes sur elles mêmes
-    terre.rotateOnAxis(yAxis, 1.0 * _elapsedTime);
-    mars.rotateOnAxis(yAxis, 1.0 * _elapsedTime);
-    saturne.rotateOnAxis(yAxis, 0.5 * _elapsedTime);
+    //! Rotation des planetes sur elles mêmes
+    _terre.rotateOnAxis(yAxis, 1.0 * _elapsedTime);
+    _mars.rotateOnAxis(yAxis, 1.0 * _elapsedTime);
+    _saturne.rotateOnAxis(yAxis, 0.5 * _elapsedTime);
     ringSaturne.rotateOnAxis(zAxis, 0.5 * _elapsedTime);
-    lune.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
+    _lune.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
 
-    renderer.render(scene, camera);
+    //! Focus lors du click sur les boutons
+    //* Si le focus de la Terre est activé
+    if (_focusTerreEnabled == true) {
+        // On définit une position de la camera par rapport à la terre
+        var offset = new THREE.Vector3(0, 5, 30);
+        // declare un vector3d pour la position de la terre
+        var terrePosition = new THREE.Vector3();
+        // enregistre la position de la terre dans terrePosition
+        _terre.getWorldPosition(terrePosition);
+        // applique la position au control
+        var controlPosition = terrePosition.add(offset);
+        _control.object.position.copy(controlPosition);
+        //focus
+        _control.target = terrePosition;
+    }
+
+    //* Si le focus du Soleil est activé
+    if (_focusSunEnabled == true) {
+        var offset = new THREE.Vector3(0, 20, 140);
+        var sunPosition = new THREE.Vector3();
+        _sun.getWorldPosition(sunPosition);
+        var controlPosition = sunPosition.add(offset);
+        _control.object.position.copy(controlPosition);
+        _control.target = sunPosition;
+    }
+
+    //* Si le focus de la Lune est activé
+    if (_focusLuneEnabled == true) {
+        var offset = new THREE.Vector3(0, 0, 5);
+        var lunePosition = new THREE.Vector3();
+        _lune.getWorldPosition(lunePosition);
+        var controlPosition = lunePosition.add(offset);
+        _control.object.position.copy(controlPosition);
+        _control.target = lunePosition;
+    }
+
+    //* Si le focus de Mars est activé
+    if (_focusMarsEnabled == true) {
+        var offset = new THREE.Vector3(0, 0, 10);
+        var marsPosition = new THREE.Vector3();
+        _mars.getWorldPosition(marsPosition);
+        var controlPosition = marsPosition.add(offset);
+        _control.object.position.copy(controlPosition);
+        _control.target = marsPosition;
+    }
+
+    //* Si le focus de Saturne est activé
+    if (_focusSaturneEnabled == true) {
+        var offset = new THREE.Vector3(0, 0, 20);
+        var saturnePosition = new THREE.Vector3();
+        _saturne.getWorldPosition(saturnePosition);
+        var controlPosition = saturnePosition.add(offset);
+        _control.object.position.copy(controlPosition);
+        _control.target = saturnePosition;
+    }
+
+    _control.update();
+    _renderer.render(_scene, _camera);
+    requestAnimationFrame(Animate)
 }
 
-renderer.setAnimationLoop(Animate);
-
 //! Resize fênetre
-window.addEventListener('resize', function() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
+function Resize() {
+    _camera.aspect = window.innerWidth / window.innerHeight;
+    _camera.updateProjectionMatrix();
+    _renderer.setSize(window.innerWidth, window.innerHeight)
+}
+
+Animate();
+InitDatGUI();
+window.addEventListener('resize', Resize);
