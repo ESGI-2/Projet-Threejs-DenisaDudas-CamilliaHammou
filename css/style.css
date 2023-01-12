@@ -1,0 +1,58 @@
+body{
+    margin:0; /* Eviter les bordures de page */
+    overflow: hidden; /* Eviter les overflow de page */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+#ui-overlay{
+    pointer-events: none; /* Désactive le pointer event afin de pouvoir intéragir avec la scène 3D */
+    position: absolute; /* Superposition par dessus le canvas WebGL*/
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    z-index: 100; /* UI au premier plan */
+}
+
+#ui-overlay .title{
+    text-align: center;
+    font-size: 60px;
+    font-family: orbitron;
+    color:#00CED1;
+}
+
+#ui-overlay button {
+    pointer-events: auto; /* /!\ important : active le pointer event pour pouvoir intéragir avec le bouton */
+    font-family: orbitron;
+    color: #00CED1;
+    padding:20px;
+    border-color: #00CED1;
+    font-size: 30px;
+    transition: 0.2s;
+    background-color: transparent;
+    border-radius: 8px;
+    display: block;
+    width: 200px;
+    margin-bottom: 40px;
+    margin-left: 40px;
+}
+
+#ui-overlay button:hover{
+    color: #fff;
+    background: #00CED1;
+    box-shadow: 0 0 10px #00CED1, 0 0 30px #00CED1, 0 0 60px #00CED1;
+}
+
+#button-soleil {
+    margin-top: 100px;
+}
+
+#ui-overlay button:active {
+	position:relative;
+	top:1px;
+}
