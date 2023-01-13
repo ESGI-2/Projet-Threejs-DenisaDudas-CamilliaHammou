@@ -32,6 +32,7 @@ var DatGUISettings = { // Parametres disponible dans le menu dat GUI
     gridHelper: true
 }
 
+
 //! Initialisation
 // Initialisation de la scene
 _scene = new THREE.Scene();
@@ -285,7 +286,6 @@ function Animate() {
     var yAxis = new THREE.Vector3(0, 1, 0);
     var zAxis = new THREE.Vector3(0, 0, -1);
 
-    // rotateOnAxis: params: @axe, @angle en degres/secondes * _elapsedTime
     // Rotation du Soleil
     _sun.rotateOnAxis(yAxis, 0.27 * _elapsedTime * DatGUISettings.vitesse);
 
@@ -302,6 +302,7 @@ function Animate() {
     ringSaturne.rotateOnAxis(zAxis, 0.5 * _elapsedTime * DatGUISettings.vitesse);
     _lune.rotateOnAxis(yAxis, 0.27 * _elapsedTime * DatGUISettings.vitesse);
 
+    //! Asteroides
     _asteroidsParent.rotateOnAxis(zAxis, 2.0 * _elapsedTime);
 
     //! Focus lors du click sur les boutons
