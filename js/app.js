@@ -27,7 +27,8 @@ var _focusSaturneEnabled = false;
 
 var DatGUISettings = { // Parametres disponible dans le menu dat GUI
     orbitColor: 0xffffff,
-    gridHelper: false
+    vitesse: 1,
+    gridHelper: true
 }
 
 //! Initialisation
@@ -242,8 +243,9 @@ function InitDatGUI() {
     const gui = new GUI();
     // Création des parametres
     const solarSystemSettings = gui.addFolder("Parametres du Système Solaire");
+    solarSystemSettings.add(DatGUISettings, "vitesse", 1, 365, 0.1).name("Vitesse")
     solarSystemSettings.addColor(DatGUISettings, "orbitColor").name("Orbites").onChange(OnChangeOrbitColor);
-    solarSystemSettings.add(DatGUISettings, "gridHelper").name("Activer/Désactiver la Grille")
+    solarSystemSettings.add(DatGUISettings, "gridHelper").name("Activer/Désactiver la Grille");
     solarSystemSettings.open();
 }
 
@@ -270,20 +272,20 @@ function Animate() {
 
     // rotateOnAxis: params: @axe, @angle en degres/secondes * _elapsedTime
     // Rotation du Soleil
-    _sun.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
+    _sun.rotateOnAxis(yAxis, 0.27 * _elapsedTime * DatGUISettings.vitesse);
 
     //! Rotation des planetes sur leur orbites
-    _orbitTerre.rotateOnAxis(zAxis, 0.0360 * _elapsedTime);
-    _orbitMars.rotateOnAxis(zAxis, 0.0687 * _elapsedTime);
-    _orbitSaturne.rotateOnAxis(zAxis, 0.010755 * _elapsedTime);
-    _orbitLune.rotateOnAxis(zAxis, 0.27 * _elapsedTime);
+    _orbitTerre.rotateOnAxis(zAxis, 0.0360 * _elapsedTime * DatGUISettings.vitesse);
+    _orbitMars.rotateOnAxis(zAxis, 0.0687 * _elapsedTime * DatGUISettings.vitesse);
+    _orbitSaturne.rotateOnAxis(zAxis, 0.010755 * _elapsedTime * DatGUISettings.vitesse);
+    _orbitLune.rotateOnAxis(zAxis, 0.27 * _elapsedTime * DatGUISettings.vitesse);
 
     //! Rotation des planetes sur elles mêmes
-    _terre.rotateOnAxis(yAxis, 1.0 * _elapsedTime);
-    _mars.rotateOnAxis(yAxis, 1.0 * _elapsedTime);
-    _saturne.rotateOnAxis(yAxis, 0.5 * _elapsedTime);
-    ringSaturne.rotateOnAxis(zAxis, 0.5 * _elapsedTime);
-    _lune.rotateOnAxis(yAxis, 0.27 * _elapsedTime);
+    _terre.rotateOnAxis(yAxis, 1.0 * _elapsedTime * DatGUISettings.vitesse);
+    _mars.rotateOnAxis(yAxis, 1.0 * _elapsedTime * DatGUISettings.vitesse);
+    _saturne.rotateOnAxis(yAxis, 0.5 * _elapsedTime * DatGUISettings.vitesse);
+    ringSaturne.rotateOnAxis(zAxis, 0.5 * _elapsedTime * DatGUISettings.vitesse);
+    _lune.rotateOnAxis(yAxis, 0.27 * _elapsedTime * DatGUISettings.vitesse);
 
     //! Focus lors du click sur les boutons
     //* Si le focus de la Terre est activé
