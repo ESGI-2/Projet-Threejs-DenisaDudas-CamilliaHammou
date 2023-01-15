@@ -25,16 +25,16 @@ var _focusLuneEnabled = false;
 var _focusMarsEnabled = false;
 var _focusSaturneEnabled = false;
 var _asteroidsParent;
+var _asteroidMesh;
 
 var DatGUISettings = { // Parametres disponible dans le menu dat GUI
     orbitColor: 0xffffff,
     vitesse: 1,
-    gridHelper: true
+    gridHelper: true,
+    asteroidCount: 100
 }
 
-
-
-//! Initialisation
+//! Initialisations
 // Initialisation de la scene
 _scene = new THREE.Scene();
 
@@ -76,10 +76,7 @@ const bgMaterial = new THREE.MeshStandardMaterial({
 const bg = new THREE.Mesh(bgGeometry, bgMaterial);
 _scene.add(bg);
 
-const axesHelper = new THREE.AxesHelper( 200 );
-_scene.add( axesHelper );
-
-//! Fin Initialisation
+//! Fin Initialisations
 
 //! Création Soleil
 const sunTexture = new THREE.TextureLoader()
@@ -137,11 +134,10 @@ const orbitLuneMat = new THREE.MeshLambertMaterial({
 });
 _orbitLune = new THREE.Mesh(orbitLuneGeo, orbitLuneMat);
 _orbitLune.position.x = 75;
-_orbitLune.rotation.z = THREE.MathUtils.degToRad(25);
+_orbitLune.rotation.y = THREE.MathUtils.degToRad(25);
 _orbitTerre.add(_orbitLune);
 
 //! Création Planètes:
-
 //* TERRE:
 const terreTexture = new THREE.TextureLoader();
 const terreGeometry = new THREE.SphereGeometry(5, 100, 100);
@@ -202,11 +198,10 @@ _lune.position.x = 10;
 _orbitLune.add(_lune);
 _lune.rotation.x = THREE.MathUtils.degToRad(-90);
 
-
 //! Création des asteroides
 _asteroidsParent = new THREE.Object3D();
 
-var asteroid_count = 125;
+var asteroid_count = 100;
 
 var min_radius = 110;
 var max_radius = 140;
@@ -214,20 +209,19 @@ var max_radius = 140;
 for (var i = 0; i < asteroid_count; i++) {
 
     var asteroidGeometry = new THREE.DodecahedronGeometry();
-    var asteroidMaterial = new THREE.MeshStandardMaterial({color: 0x8B4513}); // added brown color
-    var asteroidMesh = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+    var asteroidMaterial = new THREE.MeshStandardMaterial({color: 0x484848}); // added brown color
+    _asteroidMesh = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
 
     var radius = Math.random() * (max_radius - min_radius) + min_radius;
     var angle = Math.random() * 2 * Math.PI;
-    asteroidMesh.position.set(
+    _asteroidMesh.position.set(
         radius * Math.cos(angle),0,radius * Math.sin(angle)
         );
-    _scene.add(asteroidMesh);
+        _asteroidsParent.add(_asteroidMesh);
     }
+    _scene.add(_asteroidsParent);
 
-
-
-//! Click boutons pour focus sur les planetes
+//! Click boutons pour focus sur les planètes
 function OnClickFocusSun() {
     _focusSunEnabled = true
 }
@@ -261,6 +255,7 @@ function InitDatGUI() {
     // Création des parametres
     const solarSystemSettings = gui.addFolder("Parametres du Système Solaire");
     solarSystemSettings.add(DatGUISettings, "vitesse", 1, 365, 0.1).name("Vitesse")
+    solarSystemSettings.add(DatGUISettings, "asteroidCount", 100, 300).name("Asteroides").onChange(OnChangeAteroidCount);
     solarSystemSettings.addColor(DatGUISettings, "orbitColor").name("Orbites").onChange(OnChangeOrbitColor);
     solarSystemSettings.add(DatGUISettings, "gridHelper").name("Activer/Désactiver la Grille").onChange(OnChangeGridHelper);
     solarSystemSettings.open();
@@ -274,9 +269,37 @@ function OnChangeOrbitColor() {
     _orbitSaturne.material.color.setHex(DatGUISettings.orbitColor)
 }
 
-function OnChangeGridHelper() {
-    _gridHelper.Mesh.visible = false;
+// Fonction appelée lors du changement des nombres d'asteroides
+function OnChangeAteroidCount(value) {
+    asteroid_count = value;
+
+    _scene.children.forEach(child => {
+        if(child._asteroidMesh) _scene.remove(child);
+      });
+
+    for (var i = 0; i < asteroid_count; i++) {
+        var asteroidGeometry = new THREE.DodecahedronGeometry();
+        var asteroidMaterial = new THREE.MeshStandardMaterial({color: 0x484848});
+        _asteroidMesh = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+
+        var radius = Math.random() * (max_radius - min_radius) + min_radius;
+        var angle = Math.random() * 2 * Math.PI;
+        _asteroidMesh.position.set(
+            radius * Math.cos(angle),0,radius * Math.sin(angle)
+            );
+            _asteroidsParent.add(_asteroidMesh);
+    }
+    _scene.add(_asteroidsParent);
 }
+
+// Fonction appelée pour activer et desactiver le gridhelper
+function OnChangeGridHelper(value) {
+    if (value == true)
+        _scene.add(_gridHelper);
+    else
+        _scene.remove(_gridHelper);
+}
+
 
 //! Animation:
 function Animate() {
@@ -304,7 +327,7 @@ function Animate() {
     _lune.rotateOnAxis(yAxis, 0.27 * _elapsedTime * DatGUISettings.vitesse);
 
     //! Asteroides
-    _asteroidsParent.rotateOnAxis(zAxis, 2.0 * _elapsedTime);
+    _asteroidsParent.rotateOnAxis(yAxis, 0.03 * _elapsedTime * DatGUISettings.vitesse);
 
     //! Focus lors du click sur les boutons
     //* Si le focus de la Terre est activé
