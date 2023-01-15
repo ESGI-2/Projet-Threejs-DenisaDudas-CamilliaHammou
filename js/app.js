@@ -33,6 +33,7 @@ var DatGUISettings = { // Parametres disponible dans le menu dat GUI
 }
 
 
+
 //! Initialisation
 // Initialisation de la scene
 _scene = new THREE.Scene();
@@ -187,7 +188,7 @@ const ringSaturneMaterial = new THREE.MeshBasicMaterial({ map: ringSaturneTextur
 const ringSaturne = new THREE.Mesh(ringSaturneGeometry, ringSaturneMaterial);
 ringSaturne.position.set(160, 0, 0);
 ringSaturne.renderOrder = 1;
-ringSaturne.rotation.z = THREE.MathUtils.degToRad(25);
+ringSaturne.rotation.y = THREE.MathUtils.degToRad(25);
 _orbitSaturne.add(ringSaturne);
 
 //! Création de la LUNE:
@@ -261,7 +262,7 @@ function InitDatGUI() {
     const solarSystemSettings = gui.addFolder("Parametres du Système Solaire");
     solarSystemSettings.add(DatGUISettings, "vitesse", 1, 365, 0.1).name("Vitesse")
     solarSystemSettings.addColor(DatGUISettings, "orbitColor").name("Orbites").onChange(OnChangeOrbitColor);
-    solarSystemSettings.add(DatGUISettings, "gridHelper").name("Activer/Désactiver la Grille");
+    solarSystemSettings.add(DatGUISettings, "gridHelper").name("Activer/Désactiver la Grille").onChange(OnChangeGridHelper);
     solarSystemSettings.open();
 }
 
